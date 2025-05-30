@@ -94,7 +94,7 @@ export function FullScreenChatInterface({
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full relative z-10">
+    <div className="flex-1 flex flex-col h-full w-full relative z-10 overflow-hidden">
       {/* Uploaded Files Display */}
       {uploadedFiles.length > 0 && (
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
@@ -109,45 +109,58 @@ export function FullScreenChatInterface({
           className="absolute inset-0 overflow-y-auto px-4 md:px-8 py-6 space-y-6 scroll-smooth"
         >
           {messages.length === 0 && (
-            <div className="flex items-center justify-center min-h-[60vh] relative">
-              {/* Animated background elements */}
+            <div className="flex items-center justify-center min-h-full relative px-4">
+              {/* Enhanced animated background elements */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-blue-400/10 rounded-full blur-xl animate-pulse"></div>
-                <div className="absolute top-3/4 right-1/4 w-24 h-24 bg-purple-400/10 rounded-full blur-xl animate-pulse delay-1000"></div>
-                <div className="absolute bottom-1/4 left-1/3 w-20 h-20 bg-pink-400/10 rounded-full blur-xl animate-pulse delay-2000"></div>
+                <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
+                <div className="absolute top-3/4 right-1/4 w-48 h-48 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+                <div className="absolute bottom-1/4 left-1/3 w-40 h-40 bg-gradient-to-r from-pink-400/20 to-blue-400/20 rounded-full blur-3xl animate-pulse delay-2000"></div>
+                <div className="absolute top-1/2 right-1/3 w-32 h-32 bg-gradient-to-r from-green-400/15 to-blue-400/15 rounded-full blur-2xl animate-pulse delay-3000"></div>
               </div>
 
-              <Card className="max-w-4xl w-full mx-auto bg-white/80 dark:bg-gray-800/80 backdrop-blur-2xl border border-white/20 dark:border-gray-700/50 shadow-2xl transform transition-all duration-700 hover:scale-[1.02] hover:shadow-3xl relative overflow-hidden">
+              <Card className="max-w-5xl w-full mx-auto bg-white/90 dark:bg-gray-800/90 backdrop-blur-3xl border border-white/30 dark:border-gray-700/50 shadow-2xl transform transition-all duration-700 hover:scale-[1.01] hover:shadow-3xl relative overflow-hidden">
                 {/* Gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/50 dark:from-blue-900/20 dark:via-transparent dark:to-purple-900/20"></div>
 
                 <div className="relative p-10 text-center space-y-10">
-                  {/* Animated logo */}
+                  {/* Enhanced animated logo */}
                   <div className="relative">
-                    <div className="w-32 h-32 mx-auto bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center shadow-2xl transform transition-all duration-500 hover:rotate-6 hover:scale-110 relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
-                      <Sparkles className="w-16 h-16 text-white animate-pulse relative z-10" />
+                    <div className="w-40 h-40 mx-auto bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center shadow-2xl transform transition-all duration-500 hover:rotate-6 hover:scale-110 relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent"></div>
+                      <div className="absolute inset-0 bg-gradient-to-tl from-transparent to-white/10"></div>
+                      <Sparkles className="w-20 h-20 text-white animate-pulse relative z-10 drop-shadow-lg" />
                       <div className="absolute inset-0 animate-ping bg-white/20 rounded-3xl"></div>
+                      <div className="absolute inset-2 animate-pulse bg-gradient-to-br from-white/10 to-transparent rounded-2xl"></div>
                     </div>
-                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full animate-bounce shadow-lg"></div>
+                    <div className="absolute -top-3 -right-3 w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-bounce shadow-lg flex items-center justify-center">
+                      <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
+                    </div>
+                    <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-bounce delay-500 shadow-lg"></div>
                   </div>
 
                   {/* Enhanced title */}
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <h1 className="text-5xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent animate-gradient-x">
+                  <div className="space-y-8">
+                    <div className="space-y-4">
+                      <h1 className="text-6xl md:text-7xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent animate-gradient-x drop-shadow-sm">
                         ChatNova
                       </h1>
-                      <div className="flex items-center justify-center gap-2">
-                        <Badge variant="secondary" className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 px-3 py-1">
-                          <Zap className="w-3 h-3 mr-1" /> Powered by Gemini
+                      <div className="flex items-center justify-center gap-3">
+                        <Badge variant="secondary" className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 px-4 py-2 text-sm font-semibold shadow-lg">
+                          <Zap className="w-4 h-4 mr-2" /> Powered by Gemini
+                        </Badge>
+                        <Badge variant="outline" className="border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 px-3 py-1 text-xs">
+                          AI Assistant
                         </Badge>
                       </div>
                     </div>
-                    <p className="text-xl text-gray-600 dark:text-gray-300 leading-relaxed max-w-3xl mx-auto font-medium">
-                      Your intelligent AI companion for conversations, document analysis, and creative problem-solving.
-                      Experience the future of AI interaction with advanced reasoning and personality.
-                    </p>
+                    <div className="space-y-4">
+                      <p className="text-2xl text-gray-600 dark:text-gray-300 leading-relaxed max-w-4xl mx-auto font-medium">
+                        Your intelligent AI companion for conversations, document analysis, and creative problem-solving.
+                      </p>
+                      <p className="text-lg text-gray-500 dark:text-gray-400 leading-relaxed max-w-3xl mx-auto">
+                        Experience the future of AI interaction with advanced reasoning, multilingual support, and stunning visual design.
+                      </p>
+                    </div>
                   </div>
 
                   {/* Enhanced feature grid */}
