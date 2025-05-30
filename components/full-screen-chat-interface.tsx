@@ -1,18 +1,17 @@
 "use client"
 
 import type React from "react"
-import { useRef, useEffect } from "react"
+import { useState, useRef, useEffect } from "react"
+import type { Message } from "@ai-sdk/react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { MessageBubble } from "@/components/message-bubble"
 import { FileUpload } from "@/components/file-upload"
-import { VoiceInput } from "@/components/voice-input"
 import { UploadedFiles } from "@/components/uploaded-files"
-import { Send, Paperclip, Sparkles, ChevronDown, Bot, Zap } from "lucide-react"
-import { useState } from "react"
-import type { Message } from "@ai-sdk/react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Send, Paperclip, Sparkles, ChevronDown, Bot, Zap, Mic, MicOff, FileText, Loader2, MessageSquare } from "lucide-react"
 
 interface FullScreenChatInterfaceProps {
   messages: Message[]
@@ -46,6 +45,13 @@ export function FullScreenChatInterface({
   const [autoScroll, setAutoScroll] = useState(true)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const [showScrollButton, setShowScrollButton] = useState(false)
+  const [isListening, setIsListening] = useState(false)
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
+  const [likedMessages, setLikedMessages] = useState<Set<string>>(new Set())
+  const [dislikedMessages, setDislikedMessages] = useState<Set<string>>(new Set())
+  const [typingProgress, setTypingProgress] = useState(0)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const scrollToBottom = () => {
     if (autoScroll) {
@@ -103,29 +109,130 @@ export function FullScreenChatInterface({
           className="absolute inset-0 overflow-y-auto px-4 md:px-8 py-6 space-y-6 scroll-smooth"
         >
           {messages.length === 0 && (
-            <div className="flex items-center justify-center min-h-[60vh]">
-              <Card className="max-w-3xl w-full mx-auto bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl border-0 shadow-2xl transform transition-all duration-500 hover:scale-[1.02]">
-                <div className="p-8 text-center space-y-8">
-                  <div className="w-24 h-24 mx-auto bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg transform transition-transform hover:rotate-3">
-                    <Sparkles className="w-12 h-12 text-white animate-pulse" />
+            <div className="flex items-center justify-center min-h-[60vh] relative">
+              {/* Animated background elements */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-blue-400/10 rounded-full blur-xl animate-pulse"></div>
+                <div className="absolute top-3/4 right-1/4 w-24 h-24 bg-purple-400/10 rounded-full blur-xl animate-pulse delay-1000"></div>
+                <div className="absolute bottom-1/4 left-1/3 w-20 h-20 bg-pink-400/10 rounded-full blur-xl animate-pulse delay-2000"></div>
+              </div>
+
+              <Card className="max-w-4xl w-full mx-auto bg-white/80 dark:bg-gray-800/80 backdrop-blur-2xl border border-white/20 dark:border-gray-700/50 shadow-2xl transform transition-all duration-700 hover:scale-[1.02] hover:shadow-3xl relative overflow-hidden">
+                {/* Gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/50 dark:from-blue-900/20 dark:via-transparent dark:to-purple-900/20"></div>
+
+                <div className="relative p-10 text-center space-y-10">
+                  {/* Animated logo */}
+                  <div className="relative">
+                    <div className="w-32 h-32 mx-auto bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center shadow-2xl transform transition-all duration-500 hover:rotate-6 hover:scale-110 relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
+                      <Sparkles className="w-16 h-16 text-white animate-pulse relative z-10" />
+                      <div className="absolute inset-0 animate-ping bg-white/20 rounded-3xl"></div>
+                    </div>
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full animate-bounce shadow-lg"></div>
                   </div>
-                  <div className="space-y-4">
-                    <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                      ✨ Hello! I'm your AI assistant powered by {selectedModel === 'grok' ? 'Grok' : 'Gemini'}.
-                    </h2>
-                    <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed max-w-2xl mx-auto">
-                      I can help answer questions, have conversations, and analyze PDF documents you upload. How can I
-                      assist you today?
+
+                  {/* Enhanced title */}
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <h1 className="text-5xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent animate-gradient-x">
+                        ChatNova
+                      </h1>
+                      <div className="flex items-center justify-center gap-2">
+                        <Badge variant="secondary" className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 px-3 py-1">
+                          {selectedModel === 'grok' ? (
+                            <><Bot className="w-3 h-3 mr-1" /> Powered by Grok</>
+                          ) : (
+                            <><Zap className="w-3 h-3 mr-1" /> Powered by Gemini</>
+                          )}
+                        </Badge>
+                      </div>
+                    </div>
+                    <p className="text-xl text-gray-600 dark:text-gray-300 leading-relaxed max-w-3xl mx-auto font-medium">
+                      Your intelligent AI companion for conversations, document analysis, and creative problem-solving.
+                      Experience the future of AI interaction with advanced reasoning and personality.
                     </p>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8 max-w-2xl mx-auto">
-                    <div className="p-5 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-700 transform transition-all duration-300 hover:scale-105 hover:shadow-md">
-                      <h3 className="font-semibold text-blue-800 dark:text-blue-300 mb-2 text-lg">💬 Ask Questions</h3>
-                      <p className="text-sm text-blue-600 dark:text-blue-400">Get detailed answers on any topic</p>
-                    </div>
-                    <div className="p-5 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-700 transform transition-all duration-300 hover:scale-105 hover:shadow-md">
-                      <h3 className="font-semibold text-purple-800 dark:text-purple-300 mb-2 text-lg">📄 Analyze PDFs</h3>
-                      <p className="text-sm text-purple-600 dark:text-purple-400">Upload documents for insights</p>
+
+                  {/* Enhanced feature grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 max-w-4xl mx-auto">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="group p-6 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/20 rounded-2xl border border-blue-200 dark:border-blue-700/50 transform transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer">
+                            <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform duration-300">
+                              <MessageSquare className="w-6 h-6 text-white" />
+                            </div>
+                            <h3 className="font-bold text-blue-800 dark:text-blue-300 mb-2 text-lg">Smart Conversations</h3>
+                            <p className="text-sm text-blue-600 dark:text-blue-400 leading-relaxed">Engage in natural, intelligent conversations with context awareness</p>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Advanced AI models for natural conversations</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="group p-6 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/20 rounded-2xl border border-purple-200 dark:border-purple-700/50 transform transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer">
+                            <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform duration-300">
+                              <FileText className="w-6 h-6 text-white" />
+                            </div>
+                            <h3 className="font-bold text-purple-800 dark:text-purple-300 mb-2 text-lg">Document Analysis</h3>
+                            <p className="text-sm text-purple-600 dark:text-purple-400 leading-relaxed">Upload and analyze PDFs with intelligent content extraction</p>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Advanced PDF processing and analysis</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="group p-6 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/20 rounded-2xl border border-green-200 dark:border-green-700/50 transform transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer">
+                            <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform duration-300">
+                              <Mic className="w-6 h-6 text-white" />
+                            </div>
+                            <h3 className="font-bold text-green-800 dark:text-green-300 mb-2 text-lg">Voice Interaction</h3>
+                            <p className="text-sm text-green-600 dark:text-green-400 leading-relaxed">Speak naturally and hear responses with voice technology</p>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Voice input and text-to-speech capabilities</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+
+                  {/* Quick start suggestions */}
+                  <div className="mt-10 space-y-4">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Try asking:</p>
+                    <div className="flex flex-wrap justify-center gap-3">
+                      {[
+                        "Explain quantum computing",
+                        "Analyze my document",
+                        "Write a creative story",
+                        "Help with coding"
+                      ].map((suggestion, index) => (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          size="sm"
+                          className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-200 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-700 transition-all duration-200 hover:scale-105"
+                          onClick={() => {
+                            if (inputRef.current) {
+                              inputRef.current.value = suggestion
+                              inputRef.current.focus()
+                            }
+                          }}
+                        >
+                          {suggestion}
+                        </Button>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -183,75 +290,166 @@ export function FullScreenChatInterface({
         </div>
       )}
 
-      {/* Enhanced Input Section */}
-      <div className="p-4 md:p-6 border-t border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl">
-        <div className="max-w-3xl mx-auto space-y-3">
-          {/* Model Selector */}
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-sm text-gray-600 dark:text-gray-400">AI Model:</span>
-            <Select value={selectedModel} onValueChange={onModelChange}>
-              <SelectTrigger className="w-32 h-8 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="grok">
-                  <div className="flex items-center gap-2">
-                    <Bot className="w-4 h-4" />
-                    Grok
-                  </div>
-                </SelectItem>
-                <SelectItem value="gemini">
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-4 h-4" />
-                    Gemini
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      {/* Enhanced Input Section with Advanced Styling */}
+      <div className="relative">
+        {/* Gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/95 to-white/80 dark:from-gray-900 dark:via-gray-900/95 dark:to-gray-900/80 backdrop-blur-2xl"></div>
 
-          <form onSubmit={handleSubmit} className="flex gap-3">
-            <div className="flex-1 relative">
-              <Input
-                value={input}
-                onChange={handleInputChange}
-                placeholder="Ask ChatNova anything..."
-                disabled={isLoading}
-                className="pr-24 h-14 text-base bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200 dark:border-gray-700 focus:border-blue-400 dark:focus:border-blue-500 shadow-lg transition-all duration-200 rounded-xl"
-                autoFocus
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1">
-                <VoiceInput
-                  onTranscript={(transcript) => {
-                    const event = {
-                      target: { value: transcript },
-                    } as React.ChangeEvent<HTMLInputElement>
-                    handleInputChange(event)
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowFileUpload(!showFileUpload)}
-                  className="h-9 w-9 p-0 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-full"
-                >
-                  <Paperclip className="w-4 h-4" />
-                </Button>
+        {/* Decorative border */}
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent"></div>
+
+        <div className="relative p-6 md:p-8">
+          <div className="max-w-4xl mx-auto space-y-6">
+            {/* Model Selector with Enhanced Styling */}
+            <div className="flex items-center justify-center gap-4">
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <Sparkles className="w-4 h-4" />
+                <span className="font-medium">AI Model:</span>
               </div>
+              <Select value={selectedModel} onValueChange={onModelChange}>
+                <SelectTrigger className="w-40 h-10 text-sm bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-200 rounded-xl shadow-lg">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl">
+                  <SelectItem value="grok" className="hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                        <Bot className="w-3 h-3 text-white" />
+                      </div>
+                      <span className="font-medium">Grok</span>
+                      <Badge variant="secondary" className="text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">Witty</Badge>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="gemini" className="hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                        <Zap className="w-3 h-3 text-white" />
+                      </div>
+                      <span className="font-medium">Gemini</span>
+                      <Badge variant="secondary" className="text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300">Smart</Badge>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Button
-              type="submit"
-              disabled={isLoading || !input.trim()}
-              className="h-14 px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 rounded-xl"
-            >
-              <Send className="w-5 h-5" />
-            </Button>
-          </form>
 
-          <p className="text-xs text-center text-gray-500 dark:text-gray-400">
-            Powered by {selectedModel === 'grok' ? 'Grok by xAI • Witty and intelligent responses' : 'Google Gemini • Advanced reasoning and intelligent analysis'}
-          </p>
+            {/* Enhanced Input Form */}
+            <form onSubmit={handleSubmit} className="relative">
+              <div className="flex gap-4">
+                <div className="flex-1 relative group">
+                  {/* Input field with enhanced styling */}
+                  <div className="relative">
+                    <input
+                      ref={inputRef}
+                      value={input}
+                      onChange={handleInputChange}
+                      placeholder="Ask ChatNova anything... ✨"
+                      disabled={isLoading}
+                      className="w-full h-16 px-6 pr-32 text-base bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-2 border-gray-200 dark:border-gray-700 focus:border-blue-400 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 shadow-xl hover:shadow-2xl transition-all duration-300 rounded-2xl placeholder:text-gray-400 dark:placeholder:text-gray-500 font-medium resize-none outline-none"
+                      autoFocus
+                    />
+
+                    {/* Typing progress indicator */}
+                    {isLoading && (
+                      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200 dark:bg-gray-700 rounded-b-2xl overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 animate-pulse"></div>
+                      </div>
+                    )}
+
+                    {/* Input actions */}
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setIsListening(!isListening)}
+                              className={`h-10 w-10 p-0 rounded-xl transition-all duration-200 ${
+                                isListening
+                                  ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50'
+                                  : 'hover:bg-blue-100 dark:hover:bg-blue-900/30 text-gray-500 dark:text-gray-400'
+                              }`}
+                            >
+                              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{isListening ? 'Stop listening' : 'Voice input'}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setShowFileUpload(!showFileUpload)}
+                              className={`h-10 w-10 p-0 rounded-xl transition-all duration-200 ${
+                                showFileUpload
+                                  ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
+                                  : 'hover:bg-purple-100 dark:hover:bg-purple-900/30 text-gray-500 dark:text-gray-400'
+                              }`}
+                            >
+                              <Paperclip className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Upload documents</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Enhanced Send Button */}
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="submit"
+                        disabled={isLoading || !input.trim()}
+                        className="h-16 w-16 p-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 rounded-2xl relative overflow-hidden group"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        {isLoading ? (
+                          <Loader2 className="w-6 h-6 text-white animate-spin" />
+                        ) : (
+                          <Send className="w-6 h-6 text-white transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-200" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{isLoading ? 'Generating response...' : 'Send message'}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </form>
+
+            {/* Enhanced Footer with Status */}
+            <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span>
+                  Powered by {selectedModel === 'grok' ? 'Grok by xAI' : 'Google Gemini'} •
+                  {selectedModel === 'grok' ? ' Witty and intelligent responses' : ' Advanced reasoning and analysis'}
+                </span>
+              </div>
+
+              {uploadedFiles.length > 0 && (
+                <div className="flex items-center gap-1">
+                  <FileText className="w-3 h-3" />
+                  <span>{uploadedFiles.length} document{uploadedFiles.length > 1 ? 's' : ''} attached</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

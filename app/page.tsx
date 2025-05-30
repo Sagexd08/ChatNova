@@ -3,12 +3,8 @@
 import { useState, useEffect } from "react"
 import { useChat } from "@ai-sdk/react"
 import { FullScreenChatInterface } from "@/components/full-screen-chat-interface"
-import { ChatSidebar } from "@/components/chat-sidebar"
-import { WelcomeScreen } from "@/components/welcome-screen"
-import { ParallaxBackground } from "@/components/parallax-background"
 
 export default function ChatbotPage() {
-  const [hasStartedChat, setHasStartedChat] = useState(false)
   const [uploadedFiles, setUploadedFiles] = useState<
     Array<{
       name: string
@@ -16,17 +12,6 @@ export default function ChatbotPage() {
       type: string
     }>
   >([])
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
-  const [scrollPosition, setScrollPosition] = useState(0)
-  const [chatHistory, setChatHistory] = useState<
-    Array<{
-      id: string
-      title: string
-      timestamp: Date
-      messages: any[]
-    }>
-  >([])
-  const [currentChatId, setCurrentChatId] = useState<string | null>(null)
   const [selectedModel, setSelectedModel] = useState<'grok' | 'gemini'>('grok')
 
   useEffect(() => {
@@ -156,22 +141,11 @@ export default function ChatbotPage() {
     }
   }, [])
 
-  const { messages, input, handleInputChange, handleSubmit, isLoading, error, setMessages } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
     api: "/api/chat",
     body: {
       uploadedFiles,
       selectedModel,
-    },
-    onResponse: () => {
-      if (!hasStartedChat) {
-        setHasStartedChat(true)
-      }
-    },
-    onFinish: (message) => {
-      // Save chat to history when conversation progresses
-      if (messages.length > 0) {
-        saveChatToHistory()
-      }
     },
     onError: (error) => {
       // Only log non-extension related errors
@@ -188,102 +162,14 @@ export default function ChatbotPage() {
 
   const handleFileUpload = (files: Array<{ name: string; content: string; type: string }>) => {
     setUploadedFiles((prev) => [...prev, ...files])
-    if (!hasStartedChat) {
-      setHasStartedChat(true)
-    }
   }
 
   const removeFile = (index: number) => {
     setUploadedFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const saveChatToHistory = () => {
-    if (messages.length === 0) return
-
-    const chatId = currentChatId || Date.now().toString()
-    const title = messages[0]?.content.slice(0, 50) + "..." || "New Chat"
-
-    setChatHistory((prev) => {
-      const existingIndex = prev.findIndex((chat) => chat.id === chatId)
-      const chatData = {
-        id: chatId,
-        title,
-        timestamp: new Date(),
-        messages: [...messages],
-      }
-
-      if (existingIndex >= 0) {
-        const updated = [...prev]
-        updated[existingIndex] = chatData
-        return updated
-      } else {
-        return [chatData, ...prev]
-      }
-    })
-
-    if (!currentChatId) {
-      setCurrentChatId(chatId)
-    }
-  }
-
-  const loadChatFromHistory = (chatId: string) => {
-    const chat = chatHistory.find((c) => c.id === chatId)
-    if (chat) {
-      setMessages(chat.messages)
-      setCurrentChatId(chatId)
-      setHasStartedChat(true)
-    }
-  }
-
-  const startNewChat = () => {
-    setMessages([])
-    setCurrentChatId(null)
-    setUploadedFiles([])
-    setHasStartedChat(false)
-  }
-
-  const deleteChatFromHistory = (chatId: string) => {
-    setChatHistory((prev) => prev.filter((chat) => chat.id !== chatId))
-    if (currentChatId === chatId) {
-      startNewChat()
-    }
-  }
-
-  const handleStartChat = () => {
-    setHasStartedChat(true)
-  }
-
-  // Show welcome screen if no chat has started and no messages
-  if (!hasStartedChat && messages.length === 0) {
-    return (
-      <div className="h-screen overflow-hidden perspective-1000">
-        {/* 3D Parallax Background */}
-        <ParallaxBackground mousePosition={mousePosition} scrollPosition={scrollPosition} />
-
-        <div className="relative z-10 h-full flex flex-col overflow-auto">
-          {/* Welcome Screen with Scrolling */}
-          <div className="p-6 flex-1 overflow-auto">
-            <WelcomeScreen onFileUpload={handleFileUpload} onStartChat={handleStartChat} />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="h-screen flex overflow-hidden perspective-1000">
-      {/* 3D Parallax Background */}
-      <ParallaxBackground mousePosition={mousePosition} scrollPosition={scrollPosition} />
-
-      {/* Sidebar */}
-      <ChatSidebar
-        chatHistory={chatHistory}
-        currentChatId={currentChatId}
-        onLoadChat={loadChatFromHistory}
-        onNewChat={startNewChat}
-        onDeleteChat={deleteChatFromHistory}
-      />
-
+    <div className="h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Main Chat Interface */}
       <FullScreenChatInterface
         messages={messages}

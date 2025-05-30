@@ -112,8 +112,54 @@ export function DocumentUpload({ open, onOpenChange, onFilesUploaded }: Document
             size: file.size,
             content,
           })
+        } else if (file.type === "application/pdf") {
+          // Process PDF using server-side API
+          const formData = new FormData()
+          formData.append('file', file)
+
+          try {
+            const response = await fetch('/api/upload-pdf', {
+              method: 'POST',
+              body: formData,
+            })
+
+            const result = await response.json()
+
+            if (response.ok && result.success) {
+              content = `PDF Document: ${file.name}\n\nExtracted Content:\n${result.content}`
+
+              processed.push({
+                id: Date.now().toString() + Math.random(),
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                content,
+              })
+            } else {
+              content = `PDF Document: ${file.name}\nError: ${result.error || 'Failed to process PDF'}`
+
+              processed.push({
+                id: Date.now().toString() + Math.random(),
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                content,
+              })
+            }
+          } catch (pdfError) {
+            console.error('PDF processing error:', pdfError)
+            content = `PDF Document: ${file.name}\nError: Failed to process PDF file`
+
+            processed.push({
+              id: Date.now().toString() + Math.random(),
+              name: file.name,
+              type: file.type,
+              size: file.size,
+              content,
+            })
+          }
         } else {
-          content = `Document file: ${file.name} (${file.type}) - Content extraction would require server-side processing.`
+          content = `Document file: ${file.name} (${file.type}) - This file type is not yet supported for content extraction.`
 
           processed.push({
             id: Date.now().toString() + Math.random(),
@@ -125,6 +171,15 @@ export function DocumentUpload({ open, onOpenChange, onFilesUploaded }: Document
         }
       } catch (error) {
         console.error(`Error processing file ${file.name}:`, error)
+
+        // Add file with error message
+        processed.push({
+          id: Date.now().toString() + Math.random(),
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          content: `Error processing file: ${file.name}`,
+        })
       }
     }
 
