@@ -6,7 +6,7 @@ import type { Message } from "@ai-sdk/react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { MessageBubble } from "@/components/message-bubble"
 import { FileUpload } from "@/components/file-upload"
@@ -23,8 +23,8 @@ interface FullScreenChatInterfaceProps {
   uploadedFiles: Array<{ name: string; content: string; type: string }>
   onFileUpload: (files: Array<{ name: string; content: string; type: string }>) => void
   onRemoveFile: (index: number) => void
-  selectedModel: 'grok' | 'gemini'
-  onModelChange: (model: 'grok' | 'gemini') => void
+  selectedModel: 'gemini'
+  onModelChange: (model: 'gemini') => void
 }
 
 export function FullScreenChatInterface({
@@ -139,12 +139,8 @@ export function FullScreenChatInterface({
                         ChatNova
                       </h1>
                       <div className="flex items-center justify-center gap-2">
-                        <Badge variant="secondary" className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 px-3 py-1">
-                          {selectedModel === 'grok' ? (
-                            <><Bot className="w-3 h-3 mr-1" /> Powered by Grok</>
-                          ) : (
-                            <><Zap className="w-3 h-3 mr-1" /> Powered by Gemini</>
-                          )}
+                        <Badge variant="secondary" className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 px-3 py-1">
+                          <Zap className="w-3 h-3 mr-1" /> Powered by Gemini
                         </Badge>
                       </div>
                     </div>
@@ -300,37 +296,19 @@ export function FullScreenChatInterface({
 
         <div className="relative p-6 md:p-8">
           <div className="max-w-4xl mx-auto space-y-6">
-            {/* Model Selector with Enhanced Styling */}
+            {/* AI Model Display */}
             <div className="flex items-center justify-center gap-4">
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                 <Sparkles className="w-4 h-4" />
                 <span className="font-medium">AI Model:</span>
               </div>
-              <Select value={selectedModel} onValueChange={onModelChange}>
-                <SelectTrigger className="w-40 h-10 text-sm bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-200 rounded-xl shadow-lg">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl">
-                  <SelectItem value="grok" className="hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
-                        <Bot className="w-3 h-3 text-white" />
-                      </div>
-                      <span className="font-medium">Grok</span>
-                      <Badge variant="secondary" className="text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">Witty</Badge>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="gemini" className="hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                        <Zap className="w-3 h-3 text-white" />
-                      </div>
-                      <span className="font-medium">Gemini</span>
-                      <Badge variant="secondary" className="text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300">Smart</Badge>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-3 px-4 py-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg">
+                <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                  <Zap className="w-3 h-3 text-white" />
+                </div>
+                <span className="font-medium text-sm">Gemini</span>
+                <Badge variant="secondary" className="text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300">Smart</Badge>
+              </div>
             </div>
 
             {/* Enhanced Input Form */}
@@ -437,8 +415,7 @@ export function FullScreenChatInterface({
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <span>
-                  Powered by {selectedModel === 'grok' ? 'Grok by xAI' : 'Google Gemini'} •
-                  {selectedModel === 'grok' ? ' Witty and intelligent responses' : ' Advanced reasoning and analysis'}
+                  Powered by Google Gemini • Advanced reasoning and analysis
                 </span>
               </div>
 

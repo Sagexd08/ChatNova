@@ -12,7 +12,9 @@ export default function ChatbotPage() {
       type: string
     }>
   >([])
-  const [selectedModel, setSelectedModel] = useState<'grok' | 'gemini'>('grok')
+  const [selectedModel, setSelectedModel] = useState<'gemini'>('gemini')
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const [scrollPosition, setScrollPosition] = useState(0)
 
   useEffect(() => {
     // Comprehensive extension error suppression

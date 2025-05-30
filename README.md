@@ -22,11 +22,11 @@
 
 <div align="center">
 
-### 🎯 **Dual AI Intelligence** • 📄 **Smart Document Processing** • 🎤 **Voice Interaction** • 🌙 **Beautiful Themes**
+### 🧠 **Advanced AI Intelligence** • 📄 **Smart Document Processing** • 🎤 **Voice Interaction** • 🌙 **Beautiful Themes**
 
 </div>
 
-ChatNova revolutionizes AI interaction by combining the wit of **Grok** with the intelligence of **Gemini**, creating an unparalleled chat experience that understands both text and documents.
+ChatNova revolutionizes AI interaction with the advanced intelligence of **Google Gemini**, creating an unparalleled chat experience that understands both text and documents with superior reasoning capabilities.
 
 ---
 
@@ -51,18 +51,18 @@ ChatNova revolutionizes AI interaction by combining the wit of **Grok** with the
 
 <div align="center">
 
-| 🤖 **AI Models** | 📄 **Document Processing** | 🎨 **User Experience** | 🔧 **Technical** |
+| 🤖 **AI Intelligence** | 📄 **Document Processing** | 🎨 **User Experience** | 🔧 **Technical** |
 |:---:|:---:|:---:|:---:|
-| Grok (xAI) | PDF Upload & Analysis | Dark/Light Themes | Next.js 15 |
-| Gemini (Google) | Smart Content Extraction | Voice Input/Output | React 19 |
-| Smart Fallback | Document Q&A | Responsive Design | TypeScript |
-| Model Switching | Multi-file Support | Chat History | Tailwind CSS |
+| Google Gemini | PDF Upload & Analysis | Dark/Light Themes | Next.js 15 |
+| Advanced Reasoning | Smart Content Extraction | Voice Input/Output | React 19 |
+| Context Awareness | Document Q&A | Responsive Design | TypeScript |
+| Multi-modal AI | Multi-file Support | Chat History | Tailwind CSS |
 
 </div>
 
 ### 🎯 **Core Capabilities**
 
-- **🧠 Dual AI Intelligence**: Seamlessly switch between Grok's wit and Gemini's analytical power
+- **🧠 Advanced AI Intelligence**: Powered by Google Gemini's superior reasoning and analytical capabilities
 - **📚 Document Intelligence**: Upload PDFs and get instant insights, summaries, and answers
 - **🎤 Voice Interaction**: Speak naturally and hear responses with advanced TTS
 - **💾 Smart Memory**: Persistent chat history with Firebase integration
@@ -115,10 +115,9 @@ pnpm install
 cp .env.example .env.local
 ```
 
-Add your API keys:
+Add your API key:
 ```env
 GEMINI_API_KEY=your_gemini_api_key_here
-GROK_API_KEY=your_grok_api_key_here
 ```
 
 ### 3️⃣ Launch
