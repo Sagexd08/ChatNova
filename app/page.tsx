@@ -1,18 +1,21 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useChat } from "@ai-sdk/react"
-import { FullScreenChatInterface } from "@/components/full-screen-chat-interface"
+import { Header } from "@/components/header"
+import { Sidebar } from "@/components/sidebar"
+import { ChatInterface } from "@/components/chat-interface"
+
+interface Conversation {
+  id: string
+  title: string
+  lastMessage: string
+  timestamp: number
+}
 
 export default function ChatbotPage() {
-  const [uploadedFiles, setUploadedFiles] = useState<
-    Array<{
-      name: string
-      content: string
-      type: string
-    }>
-  >([])
-  const [selectedModel, setSelectedModel] = useState<'gemini'>('gemini')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [currentConversation, setCurrentConversation] = useState<string | null>(null)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [scrollPosition, setScrollPosition] = useState(0)
 
@@ -143,49 +146,45 @@ export default function ChatbotPage() {
     }
   }, [])
 
-  const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
-    api: "/api/chat",
-    body: {
-      uploadedFiles,
-      selectedModel,
-    },
-    onError: (error) => {
-      // Only log non-extension related errors
-      const extensionKeywords = ["MetaMask", "ChromeTransport", "extension", "wallet", "web3"]
-      const isExtensionError = extensionKeywords.some((keyword) =>
-        error.message.toLowerCase().includes(keyword.toLowerCase()),
-      )
-
-      if (!isExtensionError) {
-        console.error("Chat error:", error)
-      }
-    },
-  })
-
-  const handleFileUpload = (files: Array<{ name: string; content: string; type: string }>) => {
-    setUploadedFiles((prev) => [...prev, ...files])
+  const handleNewConversation = () => {
+    const newConversation: Conversation = {
+      id: Date.now().toString(),
+      title: "New Conversation",
+      lastMessage: "Start a new conversation",
+      timestamp: Date.now(),
+    }
+    setConversations(prev => [newConversation, ...prev])
+    setCurrentConversation(newConversation.id)
+    setSidebarOpen(false)
   }
 
-  const removeFile = (index: number) => {
-    setUploadedFiles((prev) => prev.filter((_, i) => i !== index))
+  const handleSelectConversation = (id: string) => {
+    setCurrentConversation(id)
+    setSidebarOpen(false)
+  }
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen)
   }
 
   return (
-    <div className="h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      {/* Main Chat Interface */}
-      <FullScreenChatInterface
-        messages={messages}
-        input={input}
-        handleInputChange={handleInputChange}
-        handleSubmit={handleSubmit}
-        isLoading={isLoading}
-        error={error}
-        uploadedFiles={uploadedFiles}
-        onFileUpload={handleFileUpload}
-        onRemoveFile={removeFile}
-        selectedModel={selectedModel}
-        onModelChange={setSelectedModel}
-      />
+    <div className="h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex flex-col">
+      <Header onToggleSidebar={toggleSidebar} />
+
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar
+          open={sidebarOpen}
+          onOpenChange={setSidebarOpen}
+          conversations={conversations}
+          currentConversation={currentConversation}
+          onSelectConversation={handleSelectConversation}
+          onNewConversation={handleNewConversation}
+        />
+
+        <main className="flex-1 md:ml-64">
+          <ChatInterface />
+        </main>
+      </div>
     </div>
   )
 }
