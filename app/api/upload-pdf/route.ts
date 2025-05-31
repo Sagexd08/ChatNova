@@ -4,20 +4,27 @@ export const maxDuration = 30;
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('PDF upload API called')
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
+    console.log('File received:', file ? file.name : 'No file', 'Type:', file?.type, 'Size:', file?.size)
+
     if (!file) {
+      console.error('No file provided in request')
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
     // Check file type
     if (file.type !== 'application/pdf') {
+      console.error('Invalid file type:', file.type)
       return NextResponse.json({ error: 'Only PDF files are supported' }, { status: 400 });
     }
 
     // Check file size (limit to 10MB)
     if (file.size > 10 * 1024 * 1024) {
+      console.error('File too large:', file.size, 'bytes')
       return NextResponse.json({ error: 'File size too large. Maximum 10MB allowed.' }, { status: 400 });
     }
 
@@ -28,8 +35,12 @@ export async function POST(request: NextRequest) {
     // Dynamically import pdf-parse to avoid build issues
     const pdf = (await import('pdf-parse')).default;
 
+    console.log('Starting PDF text extraction...')
+
     // Extract text from PDF
     const data = await pdf(buffer);
+
+    console.log('PDF extraction completed. Pages:', data.numpages, 'Text length:', data.text.length)
 
     // Enhanced text cleaning and formatting
     let cleanedText = data.text

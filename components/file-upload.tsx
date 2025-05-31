@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Upload, FileText, Image, X, CheckCircle, AlertCircle, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useToast } from "@/components/ui/use-toast"
 
 interface FileUploadProps {
   onFileUpload: (files: Array<{ name: string; content: string; type: string }>) => void
@@ -18,6 +19,7 @@ export function FileUpload({ onFileUpload }: FileUploadProps) {
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({})
   const [uploadStatus, setUploadStatus] = useState<Record<string, 'pending' | 'uploading' | 'success' | 'error'>>({})
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { toast } = useToast()
 
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault()
@@ -99,6 +101,8 @@ export function FileUpload({ onFileUpload }: FileUploadProps) {
 
         if (file.type === 'application/pdf') {
           // Use the PDF processing API
+          console.log('Processing PDF file:', file.name, 'Size:', file.size, 'Type:', file.type)
+
           const formData = new FormData()
           formData.append('file', file)
 
@@ -107,9 +111,18 @@ export function FileUpload({ onFileUpload }: FileUploadProps) {
             body: formData,
           })
 
-          const result = await response.json()
+          console.log('PDF API response status:', response.status)
 
-          if (response.ok && result.success) {
+          if (!response.ok) {
+            const errorText = await response.text()
+            console.error('PDF API error response:', errorText)
+            throw new Error(`PDF processing failed: ${response.status} - ${errorText}`)
+          }
+
+          const result = await response.json()
+          console.log('PDF processing result:', result)
+
+          if (result.success) {
             content = result.content
           } else {
             throw new Error(result.error || 'Failed to process PDF')
@@ -129,9 +142,24 @@ export function FileUpload({ onFileUpload }: FileUploadProps) {
         })
 
         setUploadStatus(prev => ({ ...prev, [file.name]: 'success' }))
+
+        // Show success toast for PDF files
+        if (file.type === 'application/pdf') {
+          toast({
+            title: "PDF Processed Successfully",
+            description: `${file.name} has been analyzed and is ready for AI interaction.`,
+          })
+        }
       } catch (error) {
         console.error(`Error processing file ${file.name}:`, error)
         setUploadStatus(prev => ({ ...prev, [file.name]: 'error' }))
+
+        // Show error toast
+        toast({
+          title: "File Processing Failed",
+          description: error instanceof Error ? error.message : `Failed to process ${file.name}`,
+          variant: "destructive",
+        })
       }
     }
 
@@ -145,6 +173,7 @@ export function FileUpload({ onFileUpload }: FileUploadProps) {
 
   const getFileIcon = (type: string) => {
     if (type.startsWith('image/')) return <Image className="w-4 h-4" />
+    if (type === 'application/pdf') return <FileText className="w-4 h-4 text-red-500" />
     return <FileText className="w-4 h-4" />
   }
 
@@ -192,7 +221,7 @@ export function FileUpload({ onFileUpload }: FileUploadProps) {
             multiple
             onChange={handleFileSelect}
             className="hidden"
-            accept=".txt,.pdf,.doc,.docx,.png,.jpg,.jpeg,.gif,.webp,.md,.csv,.json"
+            accept=".txt,.pdf,.doc,.docx,.png,.jpg,.jpeg,.gif,.webp,.md,.csv,.json,application/pdf"
           />
           
           <div className="space-y-4">
