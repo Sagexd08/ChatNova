@@ -3,7 +3,6 @@ import { promises as fs } from 'fs';
 import { join } from 'path';
 import * as os from 'os';
 import { v4 as uuidv4 } from 'uuid';
-import * as pdfParse from 'pdf-parse';
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,6 +49,9 @@ export async function POST(request: NextRequest) {
     
     if (fileType === 'application/pdf') {
       try {
+        // Dynamically import pdf-parse to avoid build issues
+        const pdfParse = (await import('pdf-parse')).default;
+        
         // Use pdf-parse to extract text from PDF
         const pdfData = await pdfParse(buffer);
         content = pdfData.text;
