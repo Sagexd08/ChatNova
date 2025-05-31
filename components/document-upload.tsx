@@ -112,8 +112,13 @@ export function DocumentUpload({ open, onOpenChange, onFilesUploaded }: Document
             size: file.size,
             content,
           })
-        } else if (file.type === "application/pdf") {
-          // Process PDF using server-side API
+        } else if (
+          file.type === "application/pdf" || 
+          file.type === "application/msword" || 
+          file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+          file.type === "text/plain"
+        ) {
+          // Process document files using server-side API
           const formData = new FormData()
           formData.append('file', file)
 
@@ -121,12 +126,24 @@ export function DocumentUpload({ open, onOpenChange, onFilesUploaded }: Document
             const response = await fetch('/api/upload-pdf', {
               method: 'POST',
               body: formData,
+              headers: {
+                // Don't set Content-Type here as it's automatically set with the correct boundary for FormData
+              },
             })
+
+            if (!response.ok) {
+              throw new Error(`Server responded with status: ${response.status}`)
+            }
 
             const result = await response.json()
 
-            if (response.ok && result.success) {
-              content = `PDF Document: ${file.name}\n\nExtracted Content:\n${result.content}`
+            if (result.success) {
+              let fileTypeLabel = "Document"
+              if (file.type === "application/pdf") fileTypeLabel = "PDF Document"
+              else if (file.type.includes("word")) fileTypeLabel = "Word Document"
+              else if (file.type === "text/plain") fileTypeLabel = "Text Document"
+
+              content = `${fileTypeLabel}: ${file.name}\n\nExtracted Content:\n${result.content}`
 
               processed.push({
                 id: Date.now().toString() + Math.random(),
@@ -136,7 +153,7 @@ export function DocumentUpload({ open, onOpenChange, onFilesUploaded }: Document
                 content,
               })
             } else {
-              content = `PDF Document: ${file.name}\nError: ${result.error || 'Failed to process PDF'}`
+              content = `Document: ${file.name}\nError: ${result.error || 'Failed to process document'}`
 
               processed.push({
                 id: Date.now().toString() + Math.random(),
@@ -146,9 +163,9 @@ export function DocumentUpload({ open, onOpenChange, onFilesUploaded }: Document
                 content,
               })
             }
-          } catch (pdfError) {
-            console.error('PDF processing error:', pdfError)
-            content = `PDF Document: ${file.name}\nError: Failed to process PDF file`
+          } catch (docError) {
+            console.error('Document processing error:', docError)
+            content = `Document: ${file.name}\nError: Failed to process document file`
 
             processed.push({
               id: Date.now().toString() + Math.random(),

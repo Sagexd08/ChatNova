@@ -10,8 +10,6 @@ import { Card } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
-  Mic,
-  MicOff,
   Send,
   Bot,
   User,
@@ -26,9 +24,9 @@ import {
 } from "lucide-react"
 import { useLanguage } from "@/components/language-provider"
 import { useChatHistory } from "@/hooks/use-chat-history"
-import { useVoiceInput } from "@/hooks/use-voice-input"
 import { useTextToSpeech } from "@/hooks/use-text-to-speech"
 import { DocumentUpload } from "@/components/document-upload"
+import { VoiceInput } from "@/components/voice-input"
 import { cn } from "@/lib/utils"
 
 interface ChatInterfaceProps {
@@ -51,7 +49,7 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [showDocumentUpload, setShowDocumentUpload] = useState(false)
 
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, isLoading, setInput } = useChat({
     api: "/api/chat",
     initialMessages,
     body: {
@@ -64,7 +62,27 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
     },
   })
 
-  const { isListening, transcript, startListening, stopListening, isSupported } = useVoiceInput()
+  // Handle voice commands
+  const handleVoiceCommand = (command: string, args?: string) => {
+    switch (command) {
+      case 'upload':
+        setShowDocumentUpload(true)
+        break
+      case 'clear':
+        // Clear the input field
+        setInput('')
+        break
+      case 'send':
+        // Submit the form if there's input
+        if (input.trim() || uploadedFiles.length > 0) {
+          const event = new Event('submit', { bubbles: true, cancelable: true })
+          document.querySelector('form')?.dispatchEvent(event)
+        }
+        break
+      default:
+        break
+    }
+  }
   const { speak, stop, isSpeaking, isSupported: ttsSupported } = useTextToSpeech()
 
   const scrollAreaRef = useRef<HTMLDivElement>(null)
@@ -76,12 +94,7 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
     }
   }, [conversationId, getConversationMessages])
 
-  useEffect(() => {
-    if (transcript) {
-      handleInputChange({ target: { value: transcript } } as any)
-    }
-  }, [transcript, handleInputChange])
-
+  
   useEffect(() => {
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight
@@ -323,21 +336,14 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
                 disabled={isLoading}
                 className="pr-14 h-12 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-white/20 focus:border-blue-500/50 focus:ring-blue-500/20 shadow-lg"
               />
-              {isSupported && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={isListening ? "destructive" : "ghost"}
-                  className={cn(
-                    "absolute right-2 top-2 h-8 w-8 p-0 transition-all duration-200",
-                    isListening
-                      ? "bg-red-500 hover:bg-red-600 text-white animate-pulse"
-                      : "hover:bg-blue-100 dark:hover:bg-blue-900/50",
-                  )}
-                  onClick={isListening ? stopListening : startListening}
-                >
-                  {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                </Button>
+              {(
+                <div className="absolute right-2 top-2">
+                  <VoiceInput 
+                    onTranscript={(text) => handleInputChange({ target: { value: text } } as any)} 
+                    onCommand={handleVoiceCommand}
+                    className="h-8 w-8"
+                  />
+                </div>
               )}
             </div>
             <Button

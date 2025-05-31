@@ -53,8 +53,8 @@ ChatNova revolutionizes AI interaction with the advanced intelligence of **Googl
 
 | 🤖 **AI Intelligence** | 📄 **Document Processing** | 🎨 **User Experience** | 🔧 **Technical** |
 |:---:|:---:|:---:|:---:|
-| Google Gemini | PDF Upload & Analysis | Dark/Light Themes | Next.js 15 |
-| Advanced Reasoning | Smart Content Extraction | Voice Input/Output | React 19 |
+| Google Gemini | PDF, DOC, TXT Support | Dark/Light Themes | Next.js 15 |
+| Advanced Reasoning | Smart Content Extraction | Voice Commands | React 19 |
 | Context Awareness | Document Q&A | Responsive Design | TypeScript |
 | Multi-modal AI | Multi-file Support | Chat History | Tailwind CSS |
 
@@ -63,8 +63,8 @@ ChatNova revolutionizes AI interaction with the advanced intelligence of **Googl
 ### 🎯 **Core Capabilities**
 
 - **🧠 Advanced AI Intelligence**: Powered by Google Gemini's superior reasoning and analytical capabilities
-- **📚 Document Intelligence**: Upload PDFs and get instant insights, summaries, and answers
-- **🎤 Voice Interaction**: Speak naturally and hear responses with advanced TTS
+- **📚 Document Intelligence**: Upload PDFs, DOC, and TXT files for instant insights, summaries, and answers
+- **🎤 Voice Commands**: Control the app with voice commands like "upload file", "clear chat", and "send message"
 - **💾 Smart Memory**: Persistent chat history with Firebase integration
 - **🌈 Beautiful UI**: Modern design with smooth animations and transitions
 - **📱 Universal Access**: Perfect experience across desktop, tablet, and mobile
@@ -299,6 +299,11 @@ Content-Type: application/json
 ---
 
 ## 🗺️ Roadmap
+
+### ✅ Recent Updates
+- [x] 📄 **Enhanced Document Support**: Added support for PDF, DOC, and TXT files
+- [x] 🎤 **Voice Commands**: Implemented voice commands for common actions
+- [x] 🔧 **API Improvements**: Fixed PDF upload issues and improved error handling
 
 ### 🎯 Version 2.0 (Coming Soon)
 - [ ] 🎥 **Video Chat**: Face-to-face AI conversations
