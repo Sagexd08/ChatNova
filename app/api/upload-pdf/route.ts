@@ -30,16 +30,29 @@ export async function POST(request: NextRequest) {
 
     // Extract text from PDF
     const data = await pdf(buffer);
-    
-    // Clean up the extracted text
-    const cleanedText = data.text
-      .replace(/\s+/g, ' ') // Replace multiple whitespace with single space
-      .replace(/\n\s*\n/g, '\n') // Remove empty lines
+
+    // Enhanced text cleaning and formatting
+    let cleanedText = data.text
+      .replace(/\r\n/g, '\n') // Normalize line endings
+      .replace(/\r/g, '\n') // Convert remaining \r to \n
+      .replace(/\n{3,}/g, '\n\n') // Replace multiple newlines with double newlines
+      .replace(/[ \t]+/g, ' ') // Replace multiple spaces/tabs with single space
+      .replace(/^\s+|\s+$/gm, '') // Trim each line
       .trim();
 
-    if (!cleanedText || cleanedText.length < 10) {
-      return NextResponse.json({ 
-        error: 'Could not extract readable text from PDF. The file might be image-based or corrupted.' 
+    // Add structure markers for better parsing
+    cleanedText = `=== PDF DOCUMENT: ${file.name} ===
+Pages: ${data.numpages}
+File Size: ${(file.size / 1024 / 1024).toFixed(2)} MB
+
+CONTENT:
+${cleanedText}
+
+=== END OF DOCUMENT ===`;
+
+    if (!data.text || data.text.length < 10) {
+      return NextResponse.json({
+        error: 'Could not extract readable text from PDF. The file might be image-based or corrupted.'
       }, { status: 400 });
     }
 

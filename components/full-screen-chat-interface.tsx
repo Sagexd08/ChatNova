@@ -95,9 +95,18 @@ export function FullScreenChatInterface({
 
   return (
     <div className="flex-1 flex flex-col h-full w-full relative z-10 overflow-hidden">
-      {/* Uploaded Files Display */}
+      {/* Enhanced Uploaded Files Display */}
       {uploadedFiles.length > 0 && (
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50/80 to-purple-50/80 dark:from-blue-900/20 dark:to-purple-900/20 backdrop-blur-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <span className="text-sm font-medium text-blue-800 dark:text-blue-300">
+              📄 {uploadedFiles.length} document{uploadedFiles.length > 1 ? 's' : ''} ready for analysis
+            </span>
+            <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs">
+              AI-Powered Analysis
+            </Badge>
+          </div>
           <UploadedFiles files={uploadedFiles} onRemoveFile={onRemoveFile} />
         </div>
       )}
@@ -160,6 +169,17 @@ export function FullScreenChatInterface({
                       <p className="text-lg text-gray-500 dark:text-gray-400 leading-relaxed max-w-3xl mx-auto">
                         Experience the future of AI interaction with advanced reasoning, multilingual support, and stunning visual design.
                       </p>
+                      <div className="flex items-center justify-center gap-2 mt-4">
+                        <Badge variant="outline" className="border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 px-3 py-1">
+                          📄 PDF Analysis
+                        </Badge>
+                        <Badge variant="outline" className="border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 px-3 py-1">
+                          🎤 Voice Input
+                        </Badge>
+                        <Badge variant="outline" className="border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 px-3 py-1">
+                          🌍 Multilingual
+                        </Badge>
+                      </div>
                     </div>
                   </div>
 
@@ -222,10 +242,12 @@ export function FullScreenChatInterface({
                     <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Try asking:</p>
                     <div className="flex flex-wrap justify-center gap-3">
                       {[
+                        "Summarize my PDF document",
+                        "What are the key points in this file?",
                         "Explain quantum computing",
-                        "Analyze my document",
+                        "Help me understand this document",
                         "Write a creative story",
-                        "Help with coding"
+                        "Compare these documents"
                       ].map((suggestion, index) => (
                         <Button
                           key={index}

@@ -35,17 +35,46 @@ Key guidelines:
 - Use clear, accessible language
 - Be creative and innovative in your solutions`;
 
-    // Add PDF content to the system message if files are uploaded
+    // Enhanced PDF content handling
     if (uploadedFiles && uploadedFiles.length > 0) {
-      systemPrompt += `\n\nYou have access to the following uploaded documents:\n`;
+      systemPrompt += `\n\n=== UPLOADED DOCUMENTS ===\n`;
       uploadedFiles.forEach((file: any, index: number) => {
-        systemPrompt += `\nDocument ${index + 1}: ${file.name}\nContent: ${file.content}\n`;
+        systemPrompt += `\n📄 DOCUMENT ${index + 1}: "${file.name}"\n`;
+        systemPrompt += `📝 CONTENT:\n${file.content}\n`;
+        systemPrompt += `${'='.repeat(50)}\n`;
       });
-      systemPrompt += `\nWhen answering questions, you can reference information from these documents. Always cite which document you're referencing when using information from the uploaded files.`;
+      systemPrompt += `\n🔍 IMPORTANT INSTRUCTIONS FOR DOCUMENT ANALYSIS:
+- You have full access to the content of the uploaded documents above
+- When users ask questions, carefully analyze the document content to provide accurate answers
+- Always cite the specific document name when referencing information
+- If the user asks about something not in the documents, clearly state that
+- Provide detailed quotes and page references when possible
+- Summarize key points from the documents when asked
+- Compare information across multiple documents if relevant
+- Be specific about which document contains which information`;
     }
 
-    // Prepare the full prompt
-    const fullPrompt = `${systemPrompt}\n\nUser query: ${lastUserMessage}`;
+    // Build conversation context
+    let conversationContext = "";
+    if (messages.length > 1) {
+      conversationContext = "\n\n=== CONVERSATION HISTORY ===\n";
+      messages.slice(-5).forEach((msg: Message) => { // Last 5 messages for context
+        conversationContext += `${msg.role.toUpperCase()}: ${msg.content}\n`;
+      });
+      conversationContext += "=".repeat(50) + "\n";
+    }
+
+    // Prepare the enhanced prompt with better structure
+    const fullPrompt = `${systemPrompt}${conversationContext}
+
+🎯 CURRENT USER QUERY: ${lastUserMessage}
+
+Please provide a comprehensive response based on:
+1. The uploaded documents (if any)
+2. The conversation context
+3. Your knowledge and reasoning capabilities
+
+Remember to cite sources when using document information!`;
 
     // Use Gemini API
     const geminiModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
