@@ -4,52 +4,107 @@ import { join } from 'path';
 import * as os from 'os';
 import { v4 as uuidv4 } from 'uuid';
 
-// Custom PDF text extraction function for serverless environments
+// Advanced PDF text extraction using PDF.js
 async function extractPDFText(buffer: Buffer, filename: string): Promise<string> {
   try {
-    // Convert buffer to string and look for text patterns
-    const pdfString = buffer.toString('binary');
+    // Dynamically import pdfjs-dist to avoid build issues
+    const pdfjsLib = await import('pdfjs-dist');
     
-    // Basic PDF text extraction using regex patterns
-    // This is a simplified approach that works for many standard PDFs
-    const textRegex = /BT\s*.*?ET/gs;
-    const matches = pdfString.match(textRegex);
-    
-    if (!matches) {
-      return `PDF "${filename}" appears to be image-based or uses a complex format. Text extraction requires a more advanced parser.`;
+    // Configure PDF.js worker for Node.js environment
+    if (typeof window === 'undefined') {
+      // Use legacy build for Node.js compatibility
+      const pdfjsWorker = await import('pdfjs-dist/legacy/build/pdf.worker.min.mjs');
+      pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
     }
     
-    let extractedText = '';
+    // Load the PDF document
+    const loadingTask = pdfjsLib.getDocument({
+      data: new Uint8Array(buffer),
+      useSystemFonts: true,
+      disableFontFace: true,
+      verbosity: 0, // Reduce logging
+    });
     
-    for (const match of matches) {
-      // Extract text between parentheses and brackets
-      const textContent = match.match(/\((.*?)\)/g) || match.match(/\[(.*?)\]/g);
-      if (textContent) {
-        for (const text of textContent) {
-          const cleanText = text.replace(/[()[\]]/g, '').trim();
-          if (cleanText && cleanText.length > 1) {
-            extractedText += cleanText + ' ';
-          }
+    const pdf = await loadingTask.promise;
+    let fullText = '';
+    
+    // Extract text from each page
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      try {
+        const page = await pdf.getPage(pageNum);
+        const textContent = await page.getTextContent();
+        
+        // Combine text items with proper spacing
+        const pageText = textContent.items
+          .map((item: any) => {
+            if ('str' in item) {
+              return item.str;
+            }
+            return '';
+          })
+          .join(' ');
+        
+        if (pageText.trim()) {
+          fullText += `\n--- Page ${pageNum} ---\n${pageText}\n`;
         }
+      } catch (pageError) {
+        console.error(`Error extracting text from page ${pageNum}:`, pageError);
+        fullText += `\n--- Page ${pageNum} ---\n[Error extracting text from this page]\n`;
       }
     }
     
     // Clean up the extracted text
-    extractedText = extractedText
+    fullText = fullText
       .replace(/\s+/g, ' ')
-      .replace(/[^\x20-\x7E\n\r\t]/g, '') // Remove non-printable characters
+      .replace(/\n\s*\n/g, '\n')
       .trim();
     
-    if (extractedText.length < 10) {
-      return `PDF "${filename}" processed successfully. Content appears to be primarily visual or uses advanced formatting. Consider using a specialized PDF reader for better text extraction.`;
+    if (!fullText || fullText.length < 10) {
+      return `PDF "${filename}" was processed but contains minimal readable text. This could be an image-based PDF, scanned document, or uses complex formatting that requires OCR (Optical Character Recognition) for text extraction.`;
     }
     
-    return extractedText;
+    return fullText;
     
   } catch (error) {
-    console.error('Custom PDF extraction error:', error);
-    return `PDF "${filename}" could not be processed. The file may be corrupted, password-protected, or use an unsupported format.`;
+    console.error('PDF.js extraction error:', error);
+    
+    // Fallback to basic extraction method
+    try {
+      return await basicPDFExtraction(buffer, filename);
+    } catch (fallbackError) {
+      console.error('Fallback extraction also failed:', fallbackError);
+      return `PDF "${filename}" could not be processed. The file may be corrupted, password-protected, or use an unsupported format. Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    }
   }
+}
+
+// Fallback basic PDF extraction method
+async function basicPDFExtraction(buffer: Buffer, filename: string): Promise<string> {
+  const pdfString = buffer.toString('binary');
+  
+  // Look for text patterns in PDF structure
+  const textRegex = /BT\s*.*?ET/gs;
+  const matches = pdfString.match(textRegex);
+  
+  if (!matches) {
+    return `PDF "${filename}" appears to be image-based or uses a complex format.`;
+  }
+  
+  let extractedText = '';
+  
+  for (const match of matches) {
+    const textContent = match.match(/\((.*?)\)/g) || match.match(/\[(.*?)\]/g);
+    if (textContent) {
+      for (const text of textContent) {
+        const cleanText = text.replace(/[()[\]]/g, '').trim();
+        if (cleanText && cleanText.length > 1) {
+          extractedText += cleanText + ' ';
+        }
+      }
+    }
+  }
+  
+  return extractedText.replace(/\s+/g, ' ').trim();
 }
 
 export async function POST(request: NextRequest) {

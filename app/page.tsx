@@ -245,34 +245,54 @@ export default function ChatbotPage() {
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative">
-      {/* Animated background elements */}
+      {/* Enhanced Animated background elements with better responsiveness */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Primary gradient orb */}
         <div
-          className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl animate-pulse"
+          className="absolute top-1/4 left-1/4 w-48 h-48 sm:w-64 sm:h-64 lg:w-96 lg:h-96 bg-gradient-to-r from-blue-400/20 via-purple-400/15 to-pink-400/20 rounded-full blur-3xl animate-pulse"
           style={{
             transform: `translate(${mousePosition.x * 20}px, ${mousePosition.y * 20}px)`,
           }}
-        ></div>
+        />
+        
+        {/* Secondary gradient orb */}
         <div
-          className="absolute top-3/4 right-1/4 w-80 h-80 bg-purple-400/10 rounded-full blur-3xl animate-pulse delay-1000"
+          className="absolute top-3/4 right-1/4 w-40 h-40 sm:w-56 sm:h-56 lg:w-80 lg:h-80 bg-gradient-to-r from-purple-400/15 via-pink-400/20 to-blue-400/15 rounded-full blur-3xl animate-pulse delay-1000"
           style={{
             transform: `translate(${mousePosition.x * -15}px, ${mousePosition.y * -15}px)`,
           }}
-        ></div>
+        />
+        
+        {/* Tertiary gradient orb */}
         <div
-          className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-pink-400/10 rounded-full blur-3xl animate-pulse delay-2000"
+          className="absolute bottom-1/4 left-1/3 w-32 h-32 sm:w-48 sm:h-48 lg:w-64 lg:h-64 bg-gradient-to-r from-pink-400/20 via-blue-400/15 to-purple-400/20 rounded-full blur-3xl animate-pulse delay-2000"
           style={{
             transform: `translate(${mousePosition.x * 10}px, ${mousePosition.y * 10}px)`,
           }}
-        ></div>
+        />
+        
+        {/* Additional floating elements for depth */}
+        <div
+          className="absolute top-1/2 right-1/3 w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-r from-green-400/10 to-blue-400/10 rounded-full blur-2xl animate-float"
+          style={{
+            transform: `translate(${mousePosition.x * 5}px, ${mousePosition.y * 8}px)`,
+          }}
+        />
+        
+        <div
+          className="absolute bottom-1/3 right-1/4 w-20 h-20 sm:w-28 sm:h-28 bg-gradient-to-r from-yellow-400/10 to-orange-400/10 rounded-full blur-2xl animate-float delay-1500"
+          style={{
+            transform: `translate(${mousePosition.x * -8}px, ${mousePosition.y * 12}px)`,
+          }}
+        />
       </div>
 
-      {/* Header */}
+      {/* Responsive Header */}
       <Header onToggleSidebar={toggleSidebar} />
 
-      {/* Main Content */}
+      {/* Enhanced Main Content with better responsive layout */}
       <div className="flex h-[calc(100vh-4rem)] relative z-10">
-        {/* Sidebar */}
+        {/* Responsive Sidebar */}
         <Sidebar
           open={sidebarOpen}
           onOpenChange={setSidebarOpen}
@@ -282,8 +302,8 @@ export default function ChatbotPage() {
           onNewConversation={handleNewConversation}
         />
 
-        {/* Chat Interface */}
-        <main className="flex-1 md:ml-64 relative">
+        {/* Enhanced Chat Interface with responsive margins */}
+        <main className="flex-1 transition-all duration-300 ease-in-out md:ml-64 relative">
           <FullScreenChatInterface
             messages={messages}
             input={input}
