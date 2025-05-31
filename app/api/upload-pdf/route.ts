@@ -3,6 +3,7 @@ import { promises as fs } from 'fs';
 import { join } from 'path';
 import * as os from 'os';
 import { v4 as uuidv4 } from 'uuid';
+import * as pdfParse from 'pdf-parse';
 
 export async function POST(request: NextRequest) {
   try {
@@ -48,9 +49,19 @@ export async function POST(request: NextRequest) {
     let content = '';
     
     if (fileType === 'application/pdf') {
-      // For PDF files, we would normally use a library like pdf-parse
-      // Since we can't install new packages, we'll simulate PDF parsing
-      content = `Extracted content from PDF: ${file.name}\n\nThis is simulated content extraction. In a production environment, you would use a library like pdf-parse to extract the actual text content from the PDF file.`;
+      try {
+        // Use pdf-parse to extract text from PDF
+        const pdfData = await pdfParse(buffer);
+        content = pdfData.text;
+        
+        // If no text was extracted, provide a helpful message
+        if (!content || content.trim().length === 0) {
+          content = `PDF file "${file.name}" was processed but no readable text content was found. This could be because the PDF contains only images, is password-protected, or uses a format that doesn't support text extraction.`;
+        }
+      } catch (pdfError) {
+        console.error('PDF parsing error:', pdfError);
+        content = `Error extracting content from PDF "${file.name}": ${pdfError instanceof Error ? pdfError.message : 'Unknown error occurred during PDF processing'}`;
+      }
     } else if (fileType.includes('word')) {
       // For DOC/DOCX files
       content = `Extracted content from Word document: ${file.name}\n\nThis is simulated content extraction. In a production environment, you would use a library like mammoth or docx to extract the actual text content from the Word document.`;
@@ -72,6 +83,8 @@ export async function POST(request: NextRequest) {
       filename: file.name,
       fileType,
       fileSize: file.size,
+      extractedAt: new Date().toISOString(),
+      contentLength: content.length,
     });
   } catch (error) {
     console.error('Error processing file:', error);
